@@ -5,7 +5,7 @@ qsort (x:xs) = qsort [l | l <- xs, l < x] ++
                [x] ++
                qsort [r | r <- xs, r >= x]
 
--- belows art not sophisticated. 
+-- belows are not sophisticated. 
 bsort :: (Ord a) => [a] -> [a]
 bsort [] = []
 bsort (x:xs) = let (m, zs) = bubbleup x xs in m:bsort zs
