@@ -1,4 +1,4 @@
-import Prelude hiding (Either, Right, Left)
+import Prelude hiding (Either, Right, Left, tan)
 
 data Direction = Left | Right | Straight deriving Show
 
@@ -23,31 +23,37 @@ directions (x:y:z:[]) = [direction x y z]
 directions (x:y:z:zs) = (direction x y z):directions (y:z:zs)
 
 min_point :: (Fractional a, Ord a) => [(a, a)] -> ((a, a), [(a, a)])
-min_point (x:[]) = (x, [])
-min_point ((x, y):xs) = let ((mx, my), ys) = min_point xs
-                        in if y < my
-                           then ((x, y), (mx, my):ys)
-                           else ((mx, my), (x, y):ys)
+min_point (t:[]) = (t, [])
+min_point (t@(x, y):xs) 
+    | y < my || (y == my && x < mx) = (t, m:ys)
+    | otherwise = (m, t:ys)
+    where
+      (m@(mx, my), ys) = min_point xs
 
-tangent :: (Fractional a, Ord a) => (a, a) -> (a, a) -> a
-tangent (x1, y1) (x2, y2) = - (x2 - x1) / (y2 - y1)
-
-
-
-drop_right [] y = y
-drop_right (Right:xs) (y:ys) = drop_right xs ys
-drop_right (_:xs) (y:ys) = y:(drop_right xs ys)
+tan :: (Fractional a, Ord a) => (a, a) -> (a, a) -> a
+tan (x1, y1) (x2, y2) = - (x2 - x1) / (y2 - y1)
 
 sortByAngle :: (Fractional a, Ord a) => (a, a) -> [(a, a)] -> [(a, a)]
 sortByAngle c [] = []
-sortByAngle c (x:xs) = let (m, zs) = bubbleup x xs in m:(sortByAngle c zs)
+sortByAngle c (x:xs) = let (m, zs) = min x xs in m:(sortByAngle c zs)
     where
-      bubbleup x [] = (x, [])
-      bubbleup x (y:ys)
-          | (tangent c x) > (tangent c y) = let (m, zs) = bubbleup y ys in (m, x:zs)
-          | otherwise = let (m, zs) = bubbleup x ys in (m, y:zs)
+      min x [] = (x, [])
+      min x (y:ys)
+          | (tan c x) > (tan c y) = let (m, zs) = min y ys in (m, x:zs)
+          | otherwise = let (m, zs) = min x ys in (m, y:zs)
 
 graham_scan xs = let (c, ys) = min_point xs
                      zs = sortByAngle c ys
-                     ds = directions (c:zs)
-                 in c:drop_right ds zs
+                 in graham_scan' (c:zs)
+    where
+      graham_scan' (x:y:[]) = [x, y]
+      graham_scan' (x:y:z:zs) =
+          case d of
+            Right -> graham_scan' (x:z:zs)
+            _ -> x:graham_scan' (y:z:zs)
+          where 
+            d = direction x y z
+            r = graham_scan'
+
+
+example = graham_scan [(-1, 3), (0, 4), (1, 7), (2, 5), (2.7, 6), (3, 1), (3.2, 9), (3.5, 4.1), (4, 2), (10, 8)]
