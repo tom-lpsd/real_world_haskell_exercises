@@ -1,4 +1,7 @@
 FixLines
 InteractWith
+transpose
+splitWith
+firstWord
 *.hi
 *.o
