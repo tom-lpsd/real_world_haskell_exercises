@@ -1,13 +1,13 @@
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
-class Borked a where
-    bork :: a -> String
+class Foo a where
+    foo :: a -> String
 
-instance Borked Int where
-    bork = show
+instance Foo Int where
+    foo = show
 
-instance Borked String where
-    bork = id
+instance Foo (Int, Int) where
+    foo (a, b) = foo a ++ ", " ++ foo b
 
-instance Borked (Int, Int) where
-    bork (a, b) = bork a ++ ", " ++ bork b
+instance (Foo a, Foo b) => Foo (a, b) where
+    foo (a, b) = ">>" ++ foo a ++ " " ++ foo b ++ "<<"
