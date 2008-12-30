@@ -1,0 +1,5 @@
+*.hi
+*.o
+toupper-lazy1
+toupper-lazy3
+toupper-lazy4
