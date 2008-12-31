@@ -10,12 +10,29 @@ import Control.Exception (handle, IOException)
 import Control.Monad (forM)
 import GlobRegex (matchesGlob)
 import Data.Char(toLower)
+import Data.List(isInfixOf)
 
 isPattern :: String -> Bool
 isPattern = any (`elem` "[*?")
 
+containDoubleAster = isInfixOf "**"
+
+extendPattern :: String -> String
+extendPattern ('*':'*':cs) = ('*':"/**") ++ cs
+extendPattern (c:cs) = c:(extendPattern cs)
+extendPattern [] = []
+
 namesMatching :: String -> IO [String]
-namesMatching pat
+namesMatching pat = let result = namesMatching' pat
+                    in if containDoubleAster pat
+                       then do s  <- result
+                               if null s
+                                 then result
+                                 else do s' <- namesMatching (extendPattern pat)
+                                         return $ s ++ s'
+                       else result
+
+namesMatching' pat
     | not (isPattern pat) = do exists <- doesNameExist pat
                                return (if exists then [pat] else [])
     | otherwise =
@@ -25,7 +42,7 @@ namesMatching pat
                     listMatches curDir baseName
              (dirName, baseName) ->
                  do dirs <- if isPattern dirName
-                            then namesMatching
+                            then namesMatching'
                                   (dropTrailingPathSeparator dirName)
                             else return [dirName]
                     let listDir = if isPattern baseName
@@ -59,7 +76,7 @@ listMatches dirName pat = do
                 pat'    = if onWindows
                           then map toLower pat
                           else pat
-            return (filter (`matchesGlob` pat) names'')
+            return (filter (`matchesGlob` pat') names'')
 
 isHidden ('.':_) = True
 isHidden _       = False
