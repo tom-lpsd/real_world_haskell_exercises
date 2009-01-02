@@ -9,12 +9,14 @@ data Iterate seed = Done     { unwrap :: seed }
 
 type Iterator seed = seed -> Info -> Iterate seed
 
-foldTree :: Iterator a -> a -> FilePath -> IO a
-foldTree iter initSeed path = do
+foldTree :: Iterator a -> ([FilePath] -> [FilePath]) -> a -> FilePath -> IO a
+foldTree iter order initSeed path = do
     endSeed <- fold initSeed path
     return (unwrap endSeed)
   where
-    fold seed subpath = getUsefulContents subpath >>= walk subpath seed
+    fold seed subpath = do
+      names <- getUsefulContents subpath
+      walk subpath seed (order names)
 
     walk path seed (name:names) = do
       let path' = path </> name
