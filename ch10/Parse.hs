@@ -97,6 +97,17 @@ parseRawPGM =
     identity (Greymap width height maxGrey bitmap)
   where notWhite = (`notElem` " \r\n\t")
 
+parseASCIIPGM =
+    parseWhileWith w2c (not . isSpace) ==> \header -> skipSpaces ==>&
+    assert (header == "P2") "invalid ascii header" ==>&
+    skipComment ==>& skipSpaces ==>&
+    parseNat ==> \width -> skipSpaces ==>&
+    parseNat ==> \height -> skipSpaces ==>&
+    parseNat ==> \maxGrey ->
+    parseByte ==>&
+    parseNats (width * height) ==> \bitmap ->
+    identity (Greymap width height maxGrey bitmap)
+
 parseWhileWith :: (Word8 -> a) -> (a -> Bool) -> Parse [a]
 parseWhileWith f p = fmap f <$> parseWhile (p . f)
 
@@ -108,6 +119,11 @@ parseNat = parseWhileWith w2c isDigit ==> \digits ->
                 in if n < 0
                    then bail "integer overflow"
                    else identity n
+
+parseNats :: Int -> Parse L.ByteString
+parseNats 0 = identity L.empty
+parseNats n = parseNat ==> \i ->
+              skipSpaces ==>& (L.cons (fromIntegral i) <$> (parseNats (n-1)))
 
 (==>&) :: Parse a -> Parse b -> Parse b
 p ==>& f = p ==> \_ -> f
