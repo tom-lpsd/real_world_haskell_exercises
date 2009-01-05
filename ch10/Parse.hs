@@ -88,6 +88,7 @@ parseWhile p = (fmap p <$> peekByte) ==> \mp ->
 parseRawPGM =
     parseWhileWith w2c notWhite ==> \header -> skipSpaces ==>&
     assert (header == "P5") "invalid raw header" ==>&
+    skipComment ==>&
     parseNat ==> \width -> skipSpaces ==>&
     parseNat ==> \height -> skipSpaces ==>&
     parseNat ==> \maxGrey ->
@@ -110,6 +111,13 @@ parseNat = parseWhileWith w2c isDigit ==> \digits ->
 
 (==>&) :: Parse a -> Parse b -> Parse b
 p ==>& f = p ==> \_ -> f
+
+skipComment :: Parse ()
+skipComment = peekChar ==> \c ->
+              case c of
+                Just '#' -> parseWhileWith w2c (/= '\n') ==>&
+                            parseByte ==>& identity ()
+                _ -> identity ()
 
 skipSpaces :: Parse ()
 skipSpaces = parseWhileWith w2c isSpace ==>& identity ()
