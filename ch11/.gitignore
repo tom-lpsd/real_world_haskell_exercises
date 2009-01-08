@@ -1,0 +1,6 @@
+*.o
+*.hi
+*.tix
+.hpc
+Run
+*.html
