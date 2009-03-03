@@ -1,0 +1,8 @@
+Name: bloomfilter
+Version: 0.1
+License: BSD3
+License-File: License.txt
+Category: Data
+Stability: experimental
+Build-Type: Simple
+Extra-Source-Files: cbits/lookup3.c cbits/lookup3.h
